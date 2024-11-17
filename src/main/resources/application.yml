@@ -16,6 +16,13 @@ spring:
     multipart:
       # 上传文件最大大小
       max-file-size: 5MB
+  # 启用虚拟线程
+  threads:
+    virtual:
+      enabled: true
+  # initialize the schema history table
+  flyway:
+    baseline-on-migrate: true
 server:
   # 端口号
   port: 8888
@@ -23,7 +30,7 @@ server:
 --- #---------------------数据库配置---------------------------
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/novel_test?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://localhost:3306/novel?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
     username: root
     password: test123456
   # ShardingSphere-JDBC 配置
@@ -39,14 +46,15 @@ spring:
     mode:
       # 单机模式
       type: Standalone
+      # 元数据持久化
       repository:
-        # 文件持久化
-        type: File
+        # 数据库持久化
+        type: JDBC
         props:
-          # 元数据存储路径
-          path: .shardingsphere
-      # 使用本地配置覆盖持久化配置
-      overwrite: true
+          # 元数据存储类型
+          provider: H2
+          jdbc_url: jdbc:h2:./.h2/shardingsphere
+
     # 数据源配置
     datasource:
       names: ds_0
@@ -87,7 +95,7 @@ spring:
     redis:
       host: 127.0.0.1
       port: 6379
-      password: 123456
+      password: test123456
 
   # Elasticsearch 配置
   elasticsearch:
@@ -221,6 +229,19 @@ spring:
             class: javax.net.ssl.SSLSocketFactory
             fallback: false
 
+--- #----------------------Logbook配置-----------------------------
+logbook:
+  format:
+    # 输出格式
+    style: http
+  obfuscate:
+    headers:
+      # 隐藏 Authorization 头信息
+      - Authorization
+    parameters:
+      # 隐藏密码参数
+      - password
+
 --- #---------------------自定义配置----------------------------
 novel:
   # 跨域配置
@@ -229,7 +250,7 @@ novel:
     allow-origins:
       - http://localhost:1024
       - http://localhost:8080
-  # JWT密钥
+  # JWT 密钥
   jwt:
     secret: E66559580A1ADF48CDD928516062F12E
   # XSS 过滤配置
@@ -251,9 +272,15 @@ spring:
   config:
     activate:
       on-profile: dev
+# 开启 SpringDoc 接口文档
 springdoc:
   api-docs:
     enabled: true
+# /env 端点显示属性值
+management:
+  endpoint:
+    env:
+      show-values: when_authorized
 
 --- #------------------- test 特定配置--------------------------
 spring:
